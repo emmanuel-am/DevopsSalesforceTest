@@ -1,0 +1,190 @@
+<template>
+    <lightning-card title="Componente Hijo - Análisis Detallado">
+        <div class="slds-m-around_medium">
+            <div class="status-indicator slds-box slds-theme_shade">
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_1-of-2">
+                        <p><strong>🕐 Última actualización:</strong> {internalData.timestamp}</p>
+                        <p><strong>📊 Total contactos:</strong> {totalContacts}</p>
+                        <p><strong>✅ Procesado:</strong> {internalData.processed}</p>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <template if:true={internalData.statusHistory}>
+                            <p><strong>📝 Actualizaciones:</strong> {internalData.statusHistory.length}</p>
+                        </template>
+                        <template if:true={filterConfig}>
+                            <p><strong>🔍 Filtros activos:</strong> 
+                                {filterConfig.showHighValue} | {filterConfig.showActive}
+                            </p>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Análisis General -->
+            <template if:true={analysisResults}>
+                <div class="analysis-container slds-box slds-theme_default slds-m-top_medium">
+                    <h4 class="slds-text-heading_small">📈 Análisis de Datos</h4>
+                    <div class="slds-grid slds-gutters slds-wrap">
+                        <div class="slds-col slds-size_1-of-3">
+                            <p><strong>💰 Ingresos Promedio:</strong></p>
+                            <p class="slds-text-heading_medium">{analysisResults.avgAmount}</p>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <p><strong>🎯 Opp. Promedio:</strong></p>
+                            <p class="slds-text-heading_medium">{analysisResults.avgOpportunities}</p>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <p><strong>⭐ Alto Valor:</strong></p>
+                            <p class="slds-text-heading_medium">{analysisResults.highValueContacts}</p>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Distribución de Tipos de Cuenta -->
+            <template if:true={chartData}>
+                <div class="slds-box slds-theme_info slds-m-top_medium">
+                    <h4 class="slds-text-heading_small">🏢 Distribución por Tipo de Cuenta</h4>
+                    <template for:each={chartData} for:item="item">
+                        <div key={item.type} class="slds-grid slds-m-top_x-small">
+                            <div class="slds-col slds-size_1-of-2">
+                                <span class="slds-badge">{item.type}</span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-4">
+                                {item.count} contactos
+                            </div>
+                            <div class="slds-col slds-size_1-of-4">
+                                {item.percentage}%
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+            
+            <!-- Contacto Seleccionado -->
+            <template if:true={hasContactData}>
+                <div class="slds-box slds-theme_default slds-m-top_medium">
+                    <h4 class="slds-text-heading_small">👤 Contacto Seleccionado</h4>
+                    
+                    <!-- Header del contacto -->
+                    <div class="slds-media slds-m-bottom_medium">
+                        <div class="slds-media__figure">
+                            <span class="slds-avatar slds-avatar_large">
+                                {processedContact.displayName}
+                            </span>
+                        </div>
+                        <div class="slds-media__body">
+                            <h5 class="slds-text-heading_small">{processedContact.contact.Name}</h5>
+                            <p class="slds-text-body_regular">
+                                🏢 {processedContact.accountType} | 
+                                💰 {processedContact.formattedAmount} | 
+                                🎯 {processedContact.totalOpportunities} oportunidades
+                            </p>
+                            <div class="slds-m-top_x-small">
+                                <template for:each={processedContact.enhancedTags} for:item="tag">
+                                    <span key={tag} class="slds-badge slds-badge_lightest slds-m-right_xx-small">
+                                        {tag}
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detalles del contacto -->
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_1-of-2">
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label">Email:</dt>
+                                <dd class="slds-item_detail">
+                                    <template if:true={processedContact.contact.Email}>
+                                        {processedContact.contact.Email}
+                                    </template>
+                                    <template if:false={processedContact.contact.Email}>
+                                        No disponible
+                                    </template>
+                                </dd>
+                                
+                                <dt class="slds-item_label">Teléfono:</dt>
+                                <dd class="slds-item_detail">
+                                    <template if:true={processedContact.contact.Phone}>
+                                        {processedContact.contact.Phone}
+                                    </template>
+                                    <template if:false={processedContact.contact.Phone}>
+                                        No disponible
+                                    </template>
+                                </dd>
+
+                                <dt class="slds-item_label">Actividad Reciente:</dt>
+                                <dd class="slds-item_detail">
+                                    <template if:true={processedContact.hasRecentActivity}>
+                                        ✅ Activo
+                                    </template>
+                                    <template if:false={processedContact.hasRecentActivity}>
+                                        ❌ Inactivo
+                                    </template>
+                                </dd>
+                            </dl>
+                        </div>
+
+                        <div class="slds-col slds-size_1-of-2">
+                            <!-- Score del contacto -->
+                            <div class="slds-box slds-box_x-small">
+                                <h6 class="slds-text-heading_x-small">📊 Score de Contacto</h6>
+                                <div class="slds-grid slds-gutters slds-text-align_center">
+                                    <div class="slds-col">
+                                        <p class="slds-text-heading_large">{processedContact.scoreData.total}</p>
+                                        <p class="slds-text-body_small">Total</p>
+                                    </div>
+                                    <div class="slds-col">
+                                        <p>{processedContact.scoreData.revenue}</p>
+                                        <p class="slds-text-body_small">Ingresos</p>
+                                    </div>
+                                    <div class="slds-col">
+                                        <p>{processedContact.scoreData.opportunity}</p>
+                                        <p class="slds-text-body_small">Oportunidades</p>
+                                    </div>
+                                    <div class="slds-col">
+                                        <p>{processedContact.scoreData.activity}</p>
+                                        <p class="slds-text-body_small">Actividad</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Nivel de riesgo -->
+                            <div class={processedContact.riskLevel.color}>
+                                <div class="slds-box slds-box_x-small slds-m-top_x-small">
+                                    <p><strong>⚠️ Nivel de Riesgo:</strong> {processedContact.riskLevel.level}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Historial de actualizaciones -->
+            <template if:true={internalData.statusHistory}>
+                <template if:true={internalData.statusHistory.length}>
+                    <div class="slds-box slds-theme_warning slds-m-top_medium">
+                        <h4 class="slds-text-heading_small">📝 Historial de Actualizaciones</h4>
+                        <template for:each={internalData.statusHistory} for:item="entry">
+                            <div key={entry.timestamp} class="slds-m-top_x-small">
+                                <span class="slds-badge slds-badge_inverse">{entry.status}</span>
+                                <span class="slds-m-left_x-small">{entry.timestamp}</span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </template>
+            
+            <template if:false={hasContactData}>
+                <div class="slds-box slds-theme_warning slds-m-top_medium">
+                    <div class="slds-text-align_center">
+                        <lightning-icon icon-name="utility:search" size="large"></lightning-icon>
+                        <p class="slds-m-top_small">🔍 Selecciona un contacto del componente padre para ver el análisis detallado</p>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

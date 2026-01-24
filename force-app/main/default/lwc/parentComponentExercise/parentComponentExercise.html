@@ -1,0 +1,141 @@
+<template>
+    <lightning-card title="Componente Padre - Análisis de Contactos">
+        <div class="slds-m-around_medium">
+            
+            <!-- Estadísticas -->
+            <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                <h3 class="slds-text-heading_small">📊 Estadísticas Generales</h3>
+                <div class="slds-grid slds-gutters slds-wrap">
+                    <div class="slds-col slds-size_1-of-3">
+                        <p><strong>Total Contactos:</strong> {statistics.totalContacts}</p>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <p><strong>Última Actualización:</strong> {statistics.lastUpdated}</p>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <template if:true={statistics.typeBreakdown}>
+                            <p><strong>Tipos de Cuenta:</strong> {statistics.typeBreakdown.length}</p>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="slds-box slds-m-bottom_medium">
+                <h3 class="slds-text-heading_small">🔍 Filtros</h3>
+                <div class="slds-grid slds-gutters slds-wrap">
+                    <div class="slds-col slds-size_1-of-4">
+                        <lightning-input
+                            type="checkbox"
+                            name="showHighValue"
+                            label="Solo Alto Valor (>$10K)"
+                            checked={filterConfig.showHighValue}
+                            onchange={handleFilterChange}>
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-4">
+                        <lightning-input
+                            type="checkbox"
+                            name="showActive"
+                            label="Solo Activos"
+                            checked={filterConfig.showActive}
+                            onchange={handleFilterChange}>
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-4">
+                        <lightning-combobox
+                            name="accountType"
+                            label="Tipo de Cuenta"
+                            value={filterConfig.accountType}
+                            options={accountTypes}
+                            onchange={handleFilterChange}>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-4">
+                        <lightning-input
+                            type="number"
+                            name="minOpportunities"
+                            label="Mín. Oportunidades"
+                            value={filterConfig.minOpportunities}
+                            onchange={handleFilterChange}>
+                        </lightning-input>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slds-grid slds-wrap slds-gutters">
+                <div class="slds-col slds-size_1-of-2">
+                    <h3 class="slds-text-heading_small">👥 Contactos ({filteredContacts.length})</h3>
+                    <template for:each={filteredContacts} for:item="contactWrapper">
+                        <div key={contactWrapper.contact.Id} class={contactWrapper.statusClass}>
+                            <div class="slds-box slds-m-bottom_x-small">
+                                <div class="slds-grid">
+                                    <div class="slds-col slds-size_2-of-3">
+                                        <lightning-button 
+                                            variant="base" 
+                                            label={contactWrapper.contact.Name}
+                                            data-id={contactWrapper.contact.Id}
+                                            onclick={handleContactSelect}>
+                                        </lightning-button>
+                                        <p class="slds-text-body_small">
+                                            💰 {contactWrapper.formattedAmount} | 
+                                            🎯 {contactWrapper.totalOpportunities} opp | 
+                                            🏢 {contactWrapper.accountType}
+                                        </p>
+                                        <div class="slds-m-top_xx-small">
+                                            <template for:each={contactWrapper.tags} for:item="tag">
+                                                <span key={tag} class="slds-badge slds-badge_lightest slds-m-right_xx-small">
+                                                    {tag}
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-3">
+                                        <lightning-button-group>
+                                            <lightning-button 
+                                                variant="neutral" 
+                                                label="VIP"
+                                                size="small"
+                                                data-id={contactWrapper.contact.Id}
+                                                data-status="VIP"
+                                                onclick={handleUpdateStatus}
+                                                disabled={isLoading}>
+                                            </lightning-button>
+                                            <lightning-button 
+                                                variant="neutral" 
+                                                label="Follow Up"
+                                                size="small"
+                                                data-id={contactWrapper.contact.Id}
+                                                data-status="Follow Up"
+                                                onclick={handleUpdateStatus}
+                                                disabled={isLoading}>
+                                            </lightning-button>
+                                        </lightning-button-group>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                
+                <div class="slds-col slds-size_1-of-2">
+                    <lightning-button 
+                        variant="brand" 
+                        label="Refrescar Hijo"
+                        onclick={handleRefresh}
+                        disabled={isLoading}
+                        class="slds-m-bottom_medium">
+                    </lightning-button>
+                    
+                    <!-- Pasando datos complejos al componente hijo -->
+                    <c-child-component-exercise 
+                        contact-data={selectedContact}
+                        contact-list={filteredContacts}
+                        statistics={statistics}
+                        filter-config={filterConfig}>
+                    </c-child-component-exercise>
+                </div>
+            </div>
+        </div>
+    </lightning-card>
+</template>
